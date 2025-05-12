@@ -1,59 +1,47 @@
-import { create } from 'zustand'
+import { ProductFilters } from '../api/types'
 import { useSearchParams } from 'react-router'
-import { devtools } from 'zustand/middleware'
+import { useCallback } from 'react'
 
-import { Product, ProductFilters } from '../api/types'
+export function useProductFilters() {
+  const [searchParams, setSearchParams] = useSearchParams()
 
-interface State extends ProductFilters {
-}
+  const q = searchParams.get('q') || '' as ProductFilters['q']
+  const limit = searchParams.get('limit') || 10 as ProductFilters['limit']
+  const select = searchParams.getAll('select') as ProductFilters['select']
+  const skip = searchParams.get('skip') as ProductFilters['skip']
+  
+  const setFilters = useCallback((filters: ProductFilters) => {
+    setSearchParams((params) => {
+      if (filters.q !== undefined) {
+        params.set('q', String(filters.q || ''))
+      }
+      
+      if (filters.limit) {
+        params.set('limit', String(filters.limit))
+      }
+      
+      if (filters.skip) {
+        params.set('skip', String(filters.skip))
+      }
+      
+      if (filters.select?.length) {
+        params.set('select', filters.select.join(','))
+      }
 
-type Action = {
-  setFilters: (filters: State) => void
-  resetFilters: () => void
-  updateFilters: (filters: Partial<State>) => void
-}
+      return params
+    })
+  }, [])
 
-const initialFilters: State = buildInitialFilters()
+  const resetFilters = useCallback(() => {
+    setSearchParams()
+  }, [])
 
-function buildInitialFilters(): State {
-  const searchParams = new URLSearchParams(window.location.search)
-alert('buildInitialFilters')
   return {
-    q: searchParams.get('q') || '',
-    limit: searchParams.get('limit') || 10,
-    select: searchParams.getAll('select') as unknown as (keyof Product)[] || [],
-    skip: searchParams.get('skip') || null,
+    q,
+    limit,
+    select,
+    skip,
+    setFilters,
+    resetFilters
   }
 }
-
-const store = (set: any) => ({
-  ...initialFilters,
-  setFilters: (filters: State) => {
-    updateRoute(filters)
-    return set(filters, undefined, 'm_app_filters/setFilters');
-  },
-  resetFilters: () => {
-    updateRoute({})
-    return set(initialFilters, undefined, 'm_app_filters/resetFilters')
-  },
-  updateFilters: (filters: Partial<State>) => {
-    return set((state: State) => ({ ...state, ...filters }), undefined, 'm_app_filters/updateFilters')
-  },
-})
-
-const useFilters = create<State & Action>()(
-  devtools(store)
-)
-
-function updateRoute(data) {
-  const searchParams = new URLSearchParams()
-  Object.entries(data).forEach(([key, value]) => {
-    if (value) {
-      searchParams.set(key, value)
-    }
-  })
-
-  window.history.replaceState(null, '', `?${searchParams.toString()}`)
-}
-
-export default useFilters

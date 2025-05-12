@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import styles from './filters.module.css'
-import useFilters from './store/filters';
+import { useProductFilters } from './store/filters';
 import { ProductFilters } from './api/types';
 
 const selectList = [
@@ -29,26 +29,29 @@ const selectList = [
 ]
 
 export default function Filters() {
-  const { limit, q, select, skip } = useFilters()
-  const setFilters = useFilters(state => state.setFilters)
+  const { limit, q, select, skip, setFilters, resetFilters } = useProductFilters()
   const formRef = useRef<HTMLFormElement | null>(null)
 
   function handleSubmit(event) {
     event.preventDefault()
     const data = new FormData(formRef?.current as HTMLFormElement)
     
-    const filters: ProductFilters = {
-      q: data.get('q')?.toString() || null,
-      limit: data.get('limit')?.toString() || null,
-      skip: data.get('skip')?.toString() || null,
-      select: data.getAll('select') || null,
+    const filters = {
+      q: data.get('q')?.toString() as ProductFilters['q'],
+      limit: data.get('limit')?.toString() as ProductFilters['limit'],
+      skip: data.get('skip')?.toString() as ProductFilters['skip'],
+      select: data.getAll('select') as ProductFilters['select'],
     }
 
     setFilters(filters)
   }
-  console.log({select})
+  
+  function handleReset(e) {
+    resetFilters()
+  }
+  
   return (
-    <form ref={formRef} className={styles.filters} onSubmit={handleSubmit}>
+    <form ref={formRef} className={styles.filters} onSubmit={handleSubmit} onReset={handleReset}>
       <fieldset>
         <label>Buscar por nome:</label>
         <input type="text" name="q" placeholder="Pesquisar" defaultValue={q} />
@@ -72,6 +75,7 @@ export default function Filters() {
       </select>
       
       <button type="submit">Filtrar</button>
+      <button type="reset">Resetar</button>
     </form>
 
   );
