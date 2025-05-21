@@ -165,6 +165,9 @@ stateDiagram-v2
 - Zustand 5.0.3
 - TanStack Query 5.75.0
 - React Router 7.5.3
+- Dexie 4.0.11 (IndexedDB wrapper)
+- Dexie React Hooks 1.1.7
+- Redux DevTools Extension 3.3.0
 - ESLint
 - CSS Modules
 
@@ -177,6 +180,40 @@ graph LR
     C --> D[Build]
     D --> E[Preview]
     E --> F[Deploy]
+```
+
+## 💾 Data Persistence
+
+The application uses Dexie.js for IndexedDB integration, providing:
+
+- Offline data storage
+- Real-time data synchronization
+- Efficient querying capabilities
+- Type-safe database operations
+
+### Database Schema
+
+```mermaid
+classDiagram
+    class ProductDB {
+        +number id
+        +string title
+        +string description
+        +number price
+        +string[] images
+        +string category
+        +number stock
+        +Date lastUpdated
+    }
+    
+    class FilterState {
+        +string query
+        +number page
+        +string[] selectedFields
+        +Date lastSync
+    }
+    
+    ProductDB --> FilterState
 ```
 
 ## 📄 License
